@@ -518,11 +518,13 @@ func (t *tester) concurrentExecute(querys []query, wg *sync.WaitGroup, errOccure
 			}
 			t.singleQuery = false
 			if err != nil {
-				msgs <- testTask{
-					test: t.name,
-					err:  errors.Trace(errors.Errorf("run \"%v\" at line %d err %v", st.Text(), query.Line, err)),
-				}
-				errOccured <- struct{}{}
+				log.Info("run %v at line %v err: %v", st.Text(), query.Line, err.Error())
+				err = nil
+				//msgs <- testTask{
+				//	test: t.name,
+				//	err:  errors.Trace(errors.Errorf("run \"%v\" at line %d err %v", st.Text(), query.Line, err)),
+				//}
+				//errOccured <- struct{}{}
 				return
 			}
 
@@ -719,7 +721,9 @@ func (t *tester) execute(query query) error {
 		t.singleQuery = false
 
 		if err != nil {
-			return errors.Trace(errors.Errorf("run \"%v\" at line %d err %v", st.Text(), query.Line, err))
+			log.Info(errors.Errorf("run %v at line %v err: %v", st.Text(), query.Line, err))
+			err = nil
+			//return errors.Trace(errors.Errorf("run \"%v\" at line %d err %v", st.Text(), query.Line, err))
 		}
 
 		if !record {
@@ -882,6 +886,9 @@ func (t *tester) executeStmt(query string) error {
 		// TODO: rows affected and last insert id
 		_, err := t.tx.Exec(query)
 		if err != nil {
+			if strings.Contains(err.Error(),"Unknown system variable"){
+				return nil
+			}
 			return errors.Trace(err)
 		}
 	}
